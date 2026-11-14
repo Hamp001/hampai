@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
@@ -78,9 +79,7 @@ bool read_memory_info(MemoryInfo& result) {
 bool has_avx2_support() {
     int registers[4]{};
     __cpuid(registers, 0);
-    const int max_leaf = registers[0];
-
-    if (max_leaf < 7) {
+    if (registers[0] < 7) {
         return false;
     }
 
@@ -114,8 +113,6 @@ void enable_virtual_terminal() {
     }
 }
 
-std::string make_bar(double percent, int width =  thirty) = delete;
-
 std::string progress_bar(double percent, int width = 28) {
     const int filled = static_cast<int>(std::round((percent / 100.0) * width));
     std::string bar = "[";
@@ -133,26 +130,26 @@ void render(double cpu_usage, const MemoryInfo& memory, bool avx2,
     std::cout << "  ---------------------------------------------\n\n";
 
     std::cout << "  CPU\n";
-    std::cout << "  Usage       " << std::fixed << std::setprecision(1)
+    std::cout << "  Usage        " << std::fixed << std::setprecision(1)
               << std::setw(5) << cpu_usage << "%  "
               << progress_bar(cpu_usage) << "\n";
     std::cout << "  Logical CPUs " << logical_processors << "\n";
     std::cout << "  AVX2         " << (avx2 ? "available" : "not available") << "\n\n";
 
     std::cout << "  MEMORY\n";
-    std::cout << "  Usage       " << std::setw(5) << memory.usage_percent << "%  "
+    std::cout << "  Usage        " << std::setw(5) << memory.usage_percent << "%  "
               << progress_bar(memory.usage_percent) << "\n";
-    std::cout << "  Used        " << memory.used_mb << " MB / "
+    std::cout << "  Used         " << memory.used_mb << " MB / "
               << memory.total_mb << " MB\n";
-    std::cout << "  Available   " << memory.available_mb << " MB\n\n";
+    std::cout << "  Available    " << memory.available_mb << " MB\n\n";
 
-    std::cout << "  INFERENCE (not connected yet)\n";
-    std::cout << "  Tokens/sec  --\n";
-    std::cout << "  TTFT        --\n";
-    std::cout << "  Model RAM   --\n\n";
+    std::cout << "  INFERENCE (runtime not integrated)\n";
+    std::cout << "  Tokens/sec   --\n";
+    std::cout << "  TTFT         --\n";
+    std::cout << "  Model RAM    --\n\n";
 
     std::cout << "  ---------------------------------------------\n";
-    std::cout << "  Refresh: 500 ms                         Q: quit\n";
+    std::cout << "  Refresh: 500 ms                          Q: quit\n";
     std::cout.flush();
 }
 
@@ -191,7 +188,6 @@ int main() {
 
         const double cpu_usage = calculate_cpu_usage(previous, current);
         previous = current;
-
         render(cpu_usage, memory, avx2, logical_processors);
     }
 
